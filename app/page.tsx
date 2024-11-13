@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useState } from 'react';
 
+type RowData = Record<string, string>;  // Define a type for rows in the data
+
 export default function Home() {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<RowData[]>([]);  // Set data type explicitly
 
   useEffect(() => {
     fetchSpreadsheetData();
@@ -21,15 +23,15 @@ export default function Home() {
     }
   };
 
-  const parseCSV = (csv: string) => {  // Specify the type of csv as string
+  const parseCSV = (csv: string): RowData[] => {  // Specify return type of parseCSV
     const lines = csv.split('\n');
     const headers = lines[0].split(',');
     return lines.slice(1).map((line) => {
       const values = line.split(',');
       return headers.reduce((obj, header, index) => {
-        obj[header.trim()] = values[index].trim();
+        obj[header.trim()] = values[index]?.trim();
         return obj;
-      }, {} as Record<string, string>);  // Use type assertion for the object
+      }, {} as RowData);
     });
   };
 
