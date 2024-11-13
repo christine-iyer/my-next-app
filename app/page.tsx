@@ -56,7 +56,7 @@ export default function Home() {
     }
 
     setData([...data, newEntry]);
-    setNewEntry({ Category: "TV", Name: "", Population: "" });
+    setNewEntry({ Category: "TV", Link: "", Details: "", Recommeder:"" });
   };
 
   return (
@@ -68,31 +68,47 @@ export default function Home() {
         <label>
           Category:
           <select name="Category" value={newEntry.Category} onChange={handleChange}>
-            <option value="TV">TV</option>
+            <option value="Books">Books</option>
             <option value="Politics">Politics</option>
+            <option value="TV">TV</option>
+            <option value="Movies">Movies</option>
+            <option value="Recipes">Recipes</option>
+            <option value="Audiobooks">Audiobooks</option>
+            <option value="Comdey">Comdey</option>
+            <option value="Portland">Portland</option>
           </select>
         </label>
-
         <label>
-          Name:
+          Link:
           <input
             type="text"
-            name="Name"
-            value={newEntry.Name}
+            name="Link"
+            value={newEntry.Link}
             onChange={handleChange}
-            placeholder="Enter name"
+            placeholder="Enter link"
+            required
+          />
+        </label>
+        <label>
+          Recommender:
+          <input
+            type="text"
+            name="Recommender"
+            value={newEntry.Recommender}
+            onChange={handleChange}
+            placeholder="Enter Recommender"
             required
           />
         </label>
 
         <label>
-          Population:
+          Details:
           <input
             type="number"
-            name="Population"
-            value={newEntry.Population}
+            name="Details"
+            value={newEntry.Details}
             onChange={handleChange}
-            placeholder="Enter population"
+            placeholder="Enter Details"
             required
           />
         </label>
