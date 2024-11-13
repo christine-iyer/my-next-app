@@ -13,7 +13,6 @@ export default function Home() {
       const response = await fetch(
         'https://docs.google.com/spreadsheets/d/1CpPH9yTkxAv9VqKmpZZlKx58Hh86q2XMZsG3NFZ6ZKE/export?format=csv&gid=0'
       );
-      
       const csvData = await response.text();
       const parsedData = parseCSV(csvData);
       setData(parsedData);
@@ -22,7 +21,7 @@ export default function Home() {
     }
   };
 
-  const parseCSV = (csv) => {
+  const parseCSV = (csv: string) => {  // Specify the type of csv as string
     const lines = csv.split('\n');
     const headers = lines[0].split(',');
     return lines.slice(1).map((line) => {
@@ -30,7 +29,7 @@ export default function Home() {
       return headers.reduce((obj, header, index) => {
         obj[header.trim()] = values[index].trim();
         return obj;
-      }, {});
+      }, {} as Record<string, string>);  // Use type assertion for the object
     });
   };
 
