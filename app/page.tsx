@@ -1,56 +1,53 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from 'react';
 
 export default function Home() {
-  const [name, setName] = useState("");
-  const [population, setPopulation] = useState("");
-  const [data, setData] = useState([]); // Store fetched data
+  const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetchData();
+    fetchSpreadsheetData();
   }, []);
-  const fetchData = async () => {
+
+  const fetchSpreadsheetData = async () => {
     try {
-      const response = await fetch("/api/data", { method: "GET" });
-      if (!response.ok) throw new Error("Failed to fetch data");
-      const result = await response.json();
-      setData(result.data);
+      const response = await fetch(
+        'https://docs.google.com/spreadsheets/d/1CpPH9yTkxAv9VqKmpZZlKx58Hh86q2XMZsG3NFZ6ZKE/export?format=csv&gid=0'
+      );
+      
+      const csvData = await response.text();
+      const parsedData = parseCSV(csvData);
+      setData(parsedData);
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error('Error fetching data:', error);
     }
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-  
-      if (!name || !population) {
-        console.error("Name and population are required fields.");
-        return;
-      }
-  
-      try {
-        const response = await fetch("/api/data", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, population }),
-        });
-  
-        if (response.ok) {
-          console.log("Data submitted successfully");
-          setName(""); // Clear input after submission
-          setPopulation("");
-          await fetchData();
-        } else {
-          console.error("Failed to submit data:", await response.json());
-        }
-      } catch (error) {
-        console.error("Error submitting data:", error);
-      }
-    };
   };
 
-
-
+  const parseCSV = (csv) => {
+    const lines = csv.split('\n');
+    const headers = lines[0].split(',');
+    return lines.slice(1).map((line) => {
+      const values = line.split(',');
+      return headers.reduce((obj, header, index) => {
+        obj[header.trim()] = values[index].trim();
+        return obj;
+      }, {});
+    });
+  };
 
   return (
-<div>Hwwwwha</div>
+    <div>
+      <h1>Google Sheets Data</h1>
+      <ul>
+        {data.map((row, index) => (
+          <li key={index}>
+            {Object.entries(row).map(([key, value]) => (
+              <p key={key}>
+                <strong>{key}:</strong> {value}
+              </p>
+            ))}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
