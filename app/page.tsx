@@ -104,7 +104,7 @@ export default function Home() {
         <label>
           Details:
           <input
-            type="number"
+            type="text"
             name="Details"
             value={newEntry.Details}
             onChange={handleChange}
@@ -113,14 +113,17 @@ export default function Home() {
           />
         </label>
 
-        <button type="submit">Create</button>
+        <button style={{borderColor:"blue"}}type="submit">Create</button>
       </form>
 
       <h2>Data List:</h2>
       <ul>
         {data.map((row, index) => (
           <li key={index}>
-            <strong>Category:</strong> {row.Category}, <strong>Name:</strong> {row.Name}, <strong>Population:</strong> {row.Population}
+            <strong>Category:</strong> {row.Category}, 
+            <strong>Link:</strong> {row.Link}, 
+            <strong>Details:</strong> {row.Details},
+             <strong>Recommender:</strong> {row.Recommender}
           </li>
         ))}
       </ul>
