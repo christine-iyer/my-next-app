@@ -1,31 +1,33 @@
 "use client";
 import { useEffect, useState } from 'react';
 
-// Explicitly define RowData as an object with string keys and string values
 type RowData = {
   [key: string]: string;
 };
 
 export default function Home() {
   const [data, setData] = useState<RowData[]>([]);
-  const [newEntry, setNewEntry] = useState<RowData>({ Category: "TV", Name: "", Population: "" });
+  const [newEntry, setNewEntry] = useState<RowData>({ Category: "TV", 
+    Link: "", 
+    Details: "", 
+    Recommender: "" });
 
   useEffect(() => {
+    const fetchSpreadsheetData = async () => {
+      try {
+        const response = await fetch(
+          'https://docs.google.com/spreadsheets/d/1CpPH9yTkxAv9VqKmpZZlKx58Hh86q2XMZsG3NFZ6ZKE/export?format=csv&gid=0'
+        );
+        const csvData = await response.text();
+        const parsedData = parseCSV(csvData);
+        setData(parsedData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
     fetchSpreadsheetData();
   }, []);
-
-  const fetchSpreadsheetData = async () => {
-    try {
-      const response = await fetch(
-        'https://docs.google.com/spreadsheets/d/1CpPH9yTkxAv9VqKmpZZlKx58Hh86q2XMZsG3NFZ6ZKE/export?format=csv&gid=0'
-      );
-      const csvData = await response.text();
-      const parsedData = parseCSV(csvData);
-      setData(parsedData);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    }
-  };
 
   const parseCSV = (csv: string): RowData[] => {
     const lines = csv.split('\n');
@@ -35,7 +37,7 @@ export default function Home() {
       return headers.reduce((obj, header, index) => {
         obj[header.trim()] = values[index]?.trim() || "";
         return obj;
-      }, {} as RowData);  // Assert as RowData type
+      }, {} as RowData);
     });
   };
 
@@ -46,24 +48,48 @@ export default function Home() {
       [name]: value,
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!newEntry.Name || !newEntry.Population) {
-      console.error("Name and Population are required fields.");
+  
+    if (!newEntry.Category || !newEntry.Link || !newEntry.Details || !newEntry.Recommender) {
+      console.error("All fields are required.");
       return;
     }
-
-    setData([...data, newEntry]);
-    setNewEntry({ Category: "TV", Link: "", Details: "", Recommeder:"" });
+  
+    // Send new entry to backend
+    const response = await fetch('/api/addData', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newEntry),
+    });
+  
+    if (response.ok) {
+      // Re-fetch data to show the updated list
+      fetchSpreadsheetData();
+      // Clear form
+      setNewEntry({ Category: "TV", Link: "", Details: "", Recommender: "" });
+    } else {
+      console.error("Failed to add data to Google Sheets.");
+    }
   };
+  
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   if (!newEntry.Category || !newEntry.Link || !newEntry.Details || !newEntry.Recommender) {
+  //     console.error("Name and Population are required fields.");
+  //     return;
+  //   }
+
+  //   setData([...data, newEntry]);
+  //   setNewEntry({ Category: "TV", Link: "", Details: "", Recommender: "" });
+  // };
 
   return (
     <div>
       <h1>Google Sheets Data</h1>
-
-      {/* Form to create a new entry */}
       <form onSubmit={handleSubmit}>
         <label>
           Category:
@@ -74,7 +100,7 @@ export default function Home() {
             <option value="Movies">Movies</option>
             <option value="Recipes">Recipes</option>
             <option value="Audiobooks">Audiobooks</option>
-            <option value="Comdey">Comdey</option>
+            <option value="Comedy">Comedy</option>
             <option value="Portland">Portland</option>
           </select>
         </label>
@@ -100,7 +126,6 @@ export default function Home() {
             required
           />
         </label>
-
         <label>
           Details:
           <input
@@ -112,18 +137,19 @@ export default function Home() {
             required
           />
         </label>
-
-        <button style={{borderColor:"blue"}}type="submit">Create</button>
+        <button style={{ border: "1px solid blue" }} type="submit">
+          Create
+        </button>
       </form>
 
       <h2>Data List:</h2>
       <ul>
         {data.map((row, index) => (
           <li key={index}>
-            <strong>Category:</strong> {row.Category}, 
-            <strong>Link:</strong> {row.Link}, 
-            <strong>Details:</strong> {row.Details},
-             <strong>Recommender:</strong> {row.Recommender}
+            <strong>Category:</strong> {row.Category},{" "}
+            <strong>Link:</strong> {row.Link},{" "}
+            <strong>Details:</strong> {row.Details},{" "}
+            <strong>Recommender:</strong> {row.Recommender}
           </li>
         ))}
       </ul>
