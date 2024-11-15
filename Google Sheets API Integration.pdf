@@ -1,0 +1,92 @@
+Yes, once you set up Google Sheets API credentials, you'll need to securely configure and use them in your Next.js app, especially in server-side code to avoid exposing sensitive information. Here’s a step-by-step guide:
+
+1. Set Up Google Sheets API and Credentials
+Go to the Google Cloud Console.
+Create a new project or select an existing one.
+Enable the Google Sheets API and Google Drive API.
+In the Credentials section, create a Service Account for this project.
+After creating the service account, download the JSON file with the credentials. This file contains the information your app needs to authenticate and access Google Sheets.
+2. Store the Credentials Securely
+In the Project Root: Add a credentials folder (e.g., project-root/credentials), and place the downloaded JSON credentials file there. Do not commit this file to version control.
+
+Add to .gitignore: Include the credentials folder in your .gitignore file:
+
+plaintext
+Copy code
+/credentials
+Environment Variable Path: Instead of hardcoding the path to the credentials file, set up an environment variable in .env.local to point to this file:
+
+plaintext
+Copy code
+GOOGLE_APPLICATION_CREDENTIALS=./credentials/your-credentials-file.json
+3. Configure Google Sheets Access
+Open the downloaded JSON file, and find the client_email.
+Share your Google Sheet with this email address (e.g., my-service-account@my-project-id.iam.gserviceaccount.com) with Editor permissions.
+4. Access the Credentials in addData.ts
+In your addData.ts API route, use a library like googleapis to work with the Google Sheets API. Here’s a sample setup for addData.ts:
+
+Install the googleapis Package
+In your terminal, run:
+
+bash
+Copy code
+npm install googleapis
+Example Code in addData.ts
+typescript
+Copy code
+import { google } from 'googleapis';
+import { NextResponse } from 'next/server';
+
+// Load credentials from the environment
+const sheets = google.sheets('v4');
+
+export async function POST(request: Request) {
+  try {
+    const auth = new google.auth.GoogleAuth({
+      keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    // Authorize client
+    const authClient = await auth.getClient();
+    google.options({ auth: authClient });
+
+    // Parse the request body
+    const { Category, Link, Details, Recommender } = await request.json();
+
+    // Append the new data to the Google Sheet
+    const spreadsheetId = 'your-spreadsheet-id'; // Replace with your Google Sheet ID
+    const range = 'Sheet1!A1:D1'; // Adjust range according to your sheet layout
+
+    const response = await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range,
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[Category, Link, Details, Recommender]],
+      },
+    });
+
+    return NextResponse.json({ message: 'Data added successfully', response });
+  } catch (error) {
+    console.error('Error adding data to Google Sheets:', error);
+    return NextResponse.json(
+      { error: 'Failed to add data' },
+      { status: 500 }
+    );
+  }
+}
+In this setup:
+
+The GOOGLE_APPLICATION_CREDENTIALS environment variable points to your credentials file.
+google.auth.GoogleAuth reads from this file and provides the necessary authentication to append data to the Google Sheet.
+5. Add Error Handling and Testing
+Test your API route by submitting data via your front-end form. If it doesn’t work initially, check:
+
+The client_email is shared with the sheet.
+The spreadsheet ID and range in the code match your Google Sheet setup.
+
+
+
+
+
