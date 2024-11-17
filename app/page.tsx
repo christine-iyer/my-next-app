@@ -48,43 +48,55 @@ export default function Home() {
       [name]: value,
     }));
   };
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
   
-    if (!newEntry.Category || !newEntry.Link || !newEntry.Details || !newEntry.Recommender) {
-      console.error("All fields are required.");
-      return;
-    }
+    try {
+      const response = await fetch('/api/addData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newEntry),
+      });
   
-    // Send new entry to backend
-    const response = await fetch('/api/addData', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newEntry),
-    });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error:', errorData.error || 'Failed to add data.');
+        return;
+      }
   
-    if (response.ok) {
-      // Re-fetch data to show the updated list
-      fetchSpreadsheetData();
-      // Clear form
+      await fetchSpreadsheetData();
       setNewEntry({ Category: "TV", Link: "", Details: "", Recommender: "" });
-    } else {
-      console.error("Failed to add data to Google Sheets.");
+    } catch (error) {
+      console.error('Network or server error:', error);
     }
   };
-  
   // const handleSubmit = async (e: React.FormEvent) => {
   //   e.preventDefault();
-
+  
   //   if (!newEntry.Category || !newEntry.Link || !newEntry.Details || !newEntry.Recommender) {
-  //     console.error("Name and Population are required fields.");
+  //     console.error("All fields are required.");
   //     return;
   //   }
-
-  //   setData([...data, newEntry]);
-  //   setNewEntry({ Category: "TV", Link: "", Details: "", Recommender: "" });
+  
+  //   // Send new entry to backend
+  //   const response = await fetch('/api/addData', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify(newEntry),
+  //   });
+  
+  //   if (response.ok) {
+  //     // Re-fetch data to show the updated list
+  //     fetchSpreadsheetData();
+  //     // Clear form
+  //     setNewEntry({ Category: "TV", Link: "", Details: "", Recommender: "" });
+  //   } else {
+  //     console.error("Failed to add data to Google Sheets.");
+  //   }
   // };
 
   return (

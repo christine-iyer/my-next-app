@@ -1,14 +1,39 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { google } from 'googleapis';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method === 'POST') {
-    const { Category, Link, Details, Recommender } = req.body;
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.status(405).send({ error: 'Method not allowed' });
+    return;
+  }
 
-    // TODO: Use Google Sheets API to append new data.
-    // You'll need to set up the Sheets API client and credentials.
+  const { Category, Link, Details, Recommender } = req.body;
 
-    res.status(200).json({ success: true });
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
+  if (!Category || !Link || !Details || !Recommender) {
+    res.status(400).send({ error: 'All fields are required.' });
+    return;
+  }
+
+  try {
+    const auth = new google.auth.GoogleAuth({
+      credentials: require('../../../credentials/your-credentials-file.json'),
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+    });
+
+    const sheets = google.sheets({ version: 'v4', auth });
+    const spreadsheetId = '1CpPH9yTkxAv9VqKmpZZlKx58Hh86q2XMZsG3NFZ6ZKE';
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: 'Sheet1!A:D',
+      valueInputOption: 'RAW',
+      requestBody: {
+        values: [[Category, Link, Details, Recommender]],
+      },
+    });
+
+    res.status(200).send({ message: 'Data added successfully!' });
+  } catch (error) {
+    console.error('Error writing to Google Sheets:', error);
+    res.status(500).send({ error: 'Failed to write to Google Sheets' });
   }
 }
